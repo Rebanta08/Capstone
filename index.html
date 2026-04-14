@@ -361,6 +361,7 @@
       <div class="nav-links">
         <a href="#overview">Overview</a>
         <a href="#workflow">Workflow</a>
+        <a href="#results">Results</a>
         <a href="#demo">Demo</a>
         <a href="#dataset">Dataset</a>
         <a href="#deploy">Deploy</a>
@@ -397,20 +398,20 @@
         </p>
         <div class="metric-grid">
           <div class="metric">
-            <div class="value">NLP</div>
-            <div class="label">Text-based classification pipeline</div>
+            <div class="value">85.27%</div>
+            <div class="label">Model accuracy on 9,568 test samples</div>
           </div>
           <div class="metric">
-            <div class="value">ML</div>
-            <div class="label">Supervised multi-class training</div>
+            <div class="value">8</div>
+            <div class="label">Ticket classification categories</div>
           </div>
           <div class="metric">
-            <div class="value">Web</div>
-            <div class="label">Single-file static GitHub Pages site</div>
+            <div class="value">TF-IDF</div>
+            <div class="label">Text vectorization & feature extraction</div>
           </div>
           <div class="metric">
-            <div class="value">Fast</div>
-            <div class="label">No build step required</div>
+            <div class="value">Sklearn</div>
+            <div class="label">Logistic Regression classifier</div>
           </div>
         </div>
       </div>
@@ -467,6 +468,40 @@
               <li>Model predicts a topic group</li>
               <li>Output can be shown on screen or sent to an API</li>
               <li>Support teams can use it for triage or review</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="results">
+      <div class="container">
+        <h2>Model results</h2>
+        <p class="section-lead">
+          The trained TF-IDF + Logistic Regression model achieved <strong>85.27% accuracy</strong> on 9,568 test samples, correctly classifying IT service tickets into 8 distinct support categories.
+        </p>
+        <div class="grid-2">
+          <article class="card">
+            <h3>Performance metrics</h3>
+            <ul>
+              <li><strong>Accuracy:</strong> 85.27%</li>
+              <li><strong>Correct predictions:</strong> 8,159 / 9,568</li>
+              <li><strong>Model type:</strong> Pipeline with TF-IDF + Logistic Regression</li>
+              <li><strong>Text vectorization:</strong> TF-IDF (bigrams, min_df=2, max_features=30k)</li>
+              <li><strong>hyperparameter:</strong> max_iter=2000, class_weight=balanced</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Ticket classification categories</h3>
+            <ul style="columns: 2; column-gap: 16px;">
+              <li>Access</li>
+              <li>Administrative rights</li>
+              <li>Hardware</li>
+              <li>HR Support</li>
+              <li>Internal Project</li>
+              <li>Miscellaneous</li>
+              <li>Purchase</li>
+              <li>Storage</li>
             </ul>
           </article>
         </div>
