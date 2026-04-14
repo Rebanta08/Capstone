@@ -1,38 +1,650 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Capstone</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IT Service Ticket Classifier</title>
+  <meta name="description" content="A machine learning project for classifying IT service tickets using text from support requests.">
   <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121936;
+      --panel-2: #182147;
+      --text: #e8ecff;
+      --muted: #b7c0ea;
+      --accent: #7aa2ff;
+      --accent-2: #8ef0d0;
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 20px 50px rgba(0,0,0,0.35);
+      --radius: 24px;
+      --max: 1160px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(122,162,255,0.20), transparent 30%),
+        radial-gradient(circle at 80% 0%, rgba(142,240,208,0.14), transparent 24%),
+        linear-gradient(180deg, #0a0f1d 0%, #0f1632 100%);
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(92%, var(--max)); margin: 0 auto; }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(14px);
+      background: rgba(10,15,29,0.72);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .nav-inner {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-family: system-ui, sans-serif;
-      background: #eef2ff;
-      color: #111827;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 72px;
     }
-    main {
-      padding: 2rem 2.5rem;
-      border-radius: 24px;
-      background: #ffffff;
-      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.1);
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .brand-badge {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #08111f;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .hero {
+      padding: 72px 0 56px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--accent-2);
+      background: rgba(255,255,255,0.04);
+      font-size: 0.9rem;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      line-height: 1.06;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.05rem;
       max-width: 720px;
-      text-align: center;
     }
-    h1 { margin-bottom: 0.75rem; font-size: 2.5rem; }
-    p { margin: 0.75rem 0; line-height: 1.7; }
-    code { background: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 6px; }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 26px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 13px 18px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font-weight: 600;
+      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.22);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--accent), #9c8cff);
+      color: #09101d;
+      border-color: transparent;
+    }
+
+    .hero-card, .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-card {
+      padding: 22px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .metric .value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .section {
+      padding: 28px 0 16px;
+    }
+
+    .section h2 {
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      margin: 0 0 10px;
+      letter-spacing: -0.03em;
+    }
+
+    .section-lead {
+      color: var(--muted);
+      margin: 0 0 24px;
+      max-width: 760px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      padding: 22px;
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 1.14rem;
+    }
+
+    .card p, .card li {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .card ul {
+      margin: 12px 0 0;
+      padding-left: 18px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+
+    .demo {
+      display: grid;
+      grid-template-columns: 1fr 0.9fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      padding: 18px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: rgba(4,9,22,0.6);
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+
+    .result {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .result-box {
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .result-title {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .result-value {
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    .probabilities {
+      display: grid;
+      gap: 10px;
+    }
+
+    .prob-row {
+      display: grid;
+      grid-template-columns: 110px 1fr 62px;
+      gap: 10px;
+      align-items: center;
+      font-size: 0.95rem;
+    }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .footer {
+      padding: 36px 0 60px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    code.inline {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 3px 8px;
+      border-radius: 10px;
+      color: var(--text);
+    }
+
+    @media (max-width: 960px) {
+      .hero-grid, .grid-3, .grid-2, .demo {
+        grid-template-columns: 1fr;
+      }
+      .nav-inner {
+        padding: 8px 0;
+      }
+    }
   </style>
 </head>
 <body>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <div class="brand">
+        <div class="brand-badge">IT</div>
+        <span>Ticket Classifier</span>
+      </div>
+      <div class="nav-links">
+        <a href="#overview">Overview</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#demo">Demo</a>
+        <a href="#dataset">Dataset</a>
+        <a href="#deploy">Deploy</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container hero-grid">
+      <div>
+        <div class="eyebrow">Machine Learning • Text Classification • GitHub Pages</div>
+        <h1>IT Service Ticket Classification Webpage</h1>
+        <p>
+          A clean project website for a machine learning model that classifies IT service tickets from text and predicts the most likely support topic.
+          Built as a static page so it can be published directly with GitHub Pages.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#demo">View Demo</a>
+          <a class="btn" href="#deploy">Publish on GitHub Pages</a>
+        </div>
+        <div class="pill-row">
+          <span class="pill">TF-IDF</span>
+          <span class="pill">Logistic Regression</span>
+          <span class="pill">Kaggle Dataset</span>
+          <span class="pill">Colab Training</span>
+          <span class="pill">Static Hosting</span>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <h3 style="margin-top:0;">Project snapshot</h3>
+        <p style="color: var(--muted); margin-bottom: 0;">
+          This page explains the problem, dataset, training pipeline, model workflow, and how the solution can be presented online.
+        </p>
+        <div class="metric-grid">
+          <div class="metric">
+            <div class="value">NLP</div>
+            <div class="label">Text-based classification pipeline</div>
+          </div>
+          <div class="metric">
+            <div class="value">ML</div>
+            <div class="label">Supervised multi-class training</div>
+          </div>
+          <div class="metric">
+            <div class="value">Web</div>
+            <div class="label">Single-file static GitHub Pages site</div>
+          </div>
+          <div class="metric">
+            <div class="value">Fast</div>
+            <div class="label">No build step required</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
   <main>
-    <h1>Capstone</h1>
-    <p>Your GitHub Pages site is ready.</p>
-    <p>Push updates to <code>main</code> and GitHub Actions will publish the site automatically.</p>
+    <section class="section" id="overview">
+      <div class="container">
+        <h2>Project overview</h2>
+        <p class="section-lead">
+          IT support teams receive large volumes of tickets that must be reviewed and routed to the correct team. This project shows how machine learning can classify ticket text automatically to support faster triage and more consistent handling.
+        </p>
+        <div class="grid-3">
+          <article class="card">
+            <h3>Problem</h3>
+            <p>Manual ticket review takes time, creates inconsistency, and can delay assignment to the correct support queue.</p>
+          </article>
+          <article class="card">
+            <h3>Approach</h3>
+            <p>Use natural language processing to transform ticket text into features, then train a classifier on labeled historical tickets.</p>
+          </article>
+          <article class="card">
+            <h3>Outcome</h3>
+            <p>Predict the likely ticket topic early, enabling better routing, prioritization, and operational visibility.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="workflow">
+      <div class="container">
+        <h2>How it works</h2>
+        <p class="section-lead">
+          The model takes ticket text, cleans and vectorizes it, learns topic patterns from labeled examples, and returns a predicted class for new incoming tickets.
+        </p>
+        <div class="grid-2">
+          <article class="card">
+            <h3>Training workflow</h3>
+            <ul>
+              <li>Download the dataset in Colab</li>
+              <li>Load the ticket text and labels</li>
+              <li>Split data into training and test sets</li>
+              <li>Use TF-IDF to convert text into numeric features</li>
+              <li>Train a logistic regression classifier</li>
+              <li>Evaluate with accuracy and classification report</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Inference workflow</h3>
+            <ul>
+              <li>User submits a new ticket</li>
+              <li>Text is preprocessed the same way as training</li>
+              <li>Model predicts a topic group</li>
+              <li>Output can be shown on screen or sent to an API</li>
+              <li>Support teams can use it for triage or review</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="demo">
+      <div class="container">
+        <h2>Interactive mock demo</h2>
+        <p class="section-lead">
+          This is a frontend-only mockup for presentation purposes. It simulates how a webpage could display model predictions for a ticket.
+        </p>
+        <div class="demo">
+          <div class="card">
+            <h3 style="margin-top:0;">Enter a ticket</h3>
+            <textarea id="ticketInput">Users are unable to access VPN after password reset. Several employees report login failure and cannot connect to internal resources.</textarea>
+            <div class="hero-actions" style="margin-top:16px;">
+              <button class="btn primary" onclick="runDemo()">Predict Topic</button>
+              <button class="btn" onclick="loadExample()">Load Example</button>
+            </div>
+          </div>
+          <div class="card result">
+            <div class="result-box">
+              <div class="result-title">Predicted topic</div>
+              <div class="result-value" id="predictedTopic">Access</div>
+            </div>
+            <div class="result-box">
+              <div class="result-title">Confidence</div>
+              <div class="result-value" id="confidenceValue">0.84</div>
+            </div>
+            <div class="result-box">
+              <div class="result-title">Top probabilities</div>
+              <div class="probabilities" id="probabilities"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="dataset">
+      <div class="container">
+        <h2>Dataset and model</h2>
+        <p class="section-lead">
+          The current training workflow uses a labeled IT service ticket dataset, where ticket text acts as the input feature and the topic group acts as the target label.
+        </p>
+        <div class="grid-3">
+          <article class="card">
+            <h3>Input field</h3>
+            <p><code class="inline">Document</code> contains the ticket text used for model training.</p>
+          </article>
+          <article class="card">
+            <h3>Target field</h3>
+            <p><code class="inline">Topic_group</code> is the class label the model learns to predict.</p>
+          </article>
+          <article class="card">
+            <h3>Model choice</h3>
+            <p>TF-IDF with logistic regression provides a strong baseline for multi-class text classification and is easy to explain in academic work.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="deploy">
+      <div class="container">
+        <h2>How to publish on GitHub Pages</h2>
+        <p class="section-lead">
+          This site is built as a single static HTML file, which makes GitHub Pages deployment simple.
+        </p>
+        <div class="grid-2">
+          <article class="card">
+            <h3>Publish steps</h3>
+            <ul>
+              <li>Create a new GitHub repository</li>
+              <li>Save this file as <code class="inline">index.html</code></li>
+              <li>Upload it to the repository root</li>
+              <li>Open repository settings</li>
+              <li>Go to Pages</li>
+              <li>Select the main branch and root folder</li>
+              <li>Save and wait for the site URL</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Good additions</h3>
+            <ul>
+              <li>Add screenshots from Colab training results</li>
+              <li>Insert your classification report metrics</li>
+              <li>Link the GitHub repo and notebook</li>
+              <li>Add a section for business value and limitations</li>
+              <li>Replace the mock demo with a real API later</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
   </main>
-</body>
-</html>
+
+  <footer class="footer">
+    <div class="container">
+      Built for presenting an IT ticket classification project as a polished GitHub Pages website.
+    </div>
+  </footer>
+
+  <script>
+    const examples = [
+      {
+        text: 'Users are unable to access VPN after password reset. Several employees report login failure and cannot connect to internal resources.',
+        topic: 'Access',
+        confidence: 0.84,
+        scores: { Access: 84, Network: 10, Hardware: 3, Email: 2, Software: 1 }
+      },
+      {
+        text: 'The office printer is offline and finance cannot print payroll documents before the deadline.',
+        topic: 'Hardware',
+        confidence: 0.79,
+        scores: { Hardware: 79, Network: 9, Access: 5, Software: 4, Email: 3 }
+      },
+      {
+        text: 'Outlook mailbox is full and messages are bouncing back for multiple team members.',
+        topic: 'Email',
+        confidence: 0.81,
+        scores: { Email: 81, Access: 8, Software: 5, Network: 4, Hardware: 2 }
+      }
+    ];
+
+    function renderScores(scores) {
+      const container = document.getElementById('probabilities');
+      container.innerHTML = '';
+      Object.entries(scores).forEach(([label, value]) => {
+        const row = document.createElement('div');
+        row.className = 'prob-row';
+        row.innerHTML = `
+          <div>${label}</div>
+          <div class="bar"><span style="width:${value}%"></span></div>
+          <div>${value}%</div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function classifyText(text) {
+      const t = text.toLowerCase();
+
+      if (t.includes('vpn') || t.includes('access') || t.includes('login') || t.includes('password')) {
+        return examples[0];
+      }
+      if (t.includes('printer') || t.includes('monitor') || t.includes('laptop') || t.includes('keyboard')) {
+        return examples[1];
+      }
+      if (t.includes('outlook') || t.includes('mail') || t.includes('mailbox') || t.includes('email')) {
+        return examples[2];
+      }
+
+      return {
+        text,
+        topic: 'Software',
+        confidence: 0.68,
+        scores: { Software: 68, Access: 12, Network: 10, Hardware: 6, Email: 4 }
+      };
+    }
+
+    function runDemo() {
+      const text = document.getElementById('ticketInput').value.trim();
+      const result = classifyText(text);
+      document.getElementById('predictedTopic').textContent = result.topic;
+      document.getElementById('confidenceValue').textContent = result.confidence.toFixed(2);
+      renderScores(result.scores);
+    }
+
+    function loadExample() {
+      const sample = examples[Math.floor(Math.random() * examples.length)];
+      document.getElementById('ticketInput').value = sample.text;
+      document.getElementById('predictedTopic').textContent = sample.topic;
+      document.getElementById('confidenceValue').textContent = sample.confidence.toFixed(2);
+      renderScores(result.scores);
+    }
+
+    renderScores(examples[0].scores);
+  </script>
+
+
+</body></html>
