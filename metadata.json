@@ -1,0 +1,44 @@
+{
+  "classes": [
+    "Access",
+    "Administrative rights",
+    "HR Support",
+    "Hardware",
+    "Internal Project",
+    "Miscellaneous",
+    "Purchase",
+    "Storage"
+  ],
+  "label2id": {
+    "Access": 0,
+    "Administrative rights": 1,
+    "HR Support": 2,
+    "Hardware": 3,
+    "Internal Project": 4,
+    "Miscellaneous": 5,
+    "Purchase": 6,
+    "Storage": 7
+  },
+  "id2label": {
+    "0": "Access",
+    "1": "Administrative rights",
+    "2": "HR Support",
+    "3": "Hardware",
+    "4": "Internal Project",
+    "5": "Miscellaneous",
+    "6": "Purchase",
+    "7": "Storage"
+  },
+  "num_labels": 8,
+  "val_accuracy": 0.8355629877369007,
+  "max_length": 128,
+  "model_type": "albert-base-v2",
+  "training_config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "learning_rate": 3e-05,
+    "warmup_ratio": 0.1,
+    "augmentation": "5% word dropout",
+    "class_weights": "balanced"
+  }
+}

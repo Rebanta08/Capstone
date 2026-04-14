@@ -10,8 +10,8 @@ import json
 
 # Load model and tokenizer
 print("Loading ALBERT model...")
-tokenizer = AlbertTokenizer.from_pretrained("./albert_ticket_classifier")
-model = AlbertForSequenceClassification.from_pretrained("./albert_ticket_classifier", num_labels=8)
+tokenizer = AlbertTokenizer.from_pretrained(".")
+model = AlbertForSequenceClassification.from_pretrained(".", num_labels=8)
 
 # Define classes
 classes = ["Access", "Administrative rights", "HR Support", "Hardware", 
