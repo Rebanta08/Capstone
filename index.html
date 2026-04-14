@@ -631,8 +631,8 @@
       });
     }
 
-    // Hugging Face Spaces API endpoint - Connected to live ALBERT model
-    const HF_API_URL = "https://rebanta08-capstonemodel.hf.space/api/predict";
+    // Hugging Face Spaces API endpoint - Connected to live model
+    const HF_BASE = "https://rebanta08-capstonemodel.hf.space/gradio_api/call/gradio_classify";
     
     async function classifyText(text) {
       if (!text.trim()) {
@@ -645,42 +645,45 @@
         document.getElementById('predictedTopic').textContent = 'Loading...';
         document.getElementById('confidenceValue').textContent = '-';
         
-        // Call HF Spaces Gradio API
-        const response = await fetch(HF_API_URL, {
+        // Step 1: Submit the request and get event ID
+        const submitResponse = await fetch(HF_BASE, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ data: [text] })
         });
 
-        if (!response.ok) {
-          throw new Error(`API Error: ${response.status}`);
+        if (!submitResponse.ok) {
+          throw new Error(`API Error: ${submitResponse.status}`);
         }
 
-        const data = await response.json();
-        const result = data.data?.[0];
+        const { event_id } = await submitResponse.json();
+        if (!event_id) throw new Error("No event ID returned");
 
-        if (!result) {
-          throw new Error("Invalid API response");
-        }
-
-        // Gradio returns JSON output — parse if string
-        let prediction;
-        if (typeof result === 'string') {
-          prediction = JSON.parse(result);
-        } else {
-          prediction = result;
-        }
-
-        // Extract predicted class and confidence
-        const predictedClass = prediction.predicted_class || 'Unknown';
-        const confidence = prediction.confidence || 0;
-        const allScores = prediction.all_scores || {};
-
-        // Convert scores to percentages for display
+        // Step 2: Get the result using event ID
+        const resultResponse = await fetch(`${HF_BASE}/${event_id}`);
+        const resultText = await resultResponse.text();
+        
+        // Parse SSE response — find the "data:" line
+        const dataLine = resultText.split('\n').find(line => line.startsWith('data:'));
+        if (!dataLine) throw new Error("No data in response");
+        
+        const dataArray = JSON.parse(dataLine.replace('data: ', ''));
+        const markdown = dataArray[0];
+        
+        // Parse the Markdown response into structured data
+        const categoryMatch = markdown.match(/\*\*Predicted Category:\*\*\s*(.+)/);
+        const confidenceMatch = markdown.match(/\*\*Confidence:\*\*\s*([\d.]+)%/);
+        
+        const predictedClass = categoryMatch ? categoryMatch[1].trim() : 'Unknown';
+        const confidence = confidenceMatch ? parseFloat(confidenceMatch[1]) / 100 : 0;
+        
+        // Parse all scores
         const scores = {};
-        Object.entries(allScores).forEach(([key, val]) => {
-          scores[key] = Math.round(val * 100);
-        });
+        const scoreRegex = /•\s*(.+?):\s*([\d.]+)%/g;
+        let match;
+        while ((match = scoreRegex.exec(markdown)) !== null) {
+          scores[match[1].trim()] = Math.round(parseFloat(match[2]));
+        }
 
         return {
           text,
