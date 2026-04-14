@@ -668,21 +668,42 @@
         if (!dataLine) throw new Error("No data in response");
         
         const dataArray = JSON.parse(dataLine.replace('data: ', ''));
-        const markdown = dataArray[0];
+        const rawResult = dataArray[0];
         
-        // Parse the Markdown response into structured data
-        const categoryMatch = markdown.match(/\*\*Predicted Category:\*\*\s*(.+)/);
-        const confidenceMatch = markdown.match(/\*\*Confidence:\*\*\s*([\d.]+)%/);
+        // Handle both JSON object and Markdown string responses
+        let predictedClass, confidence, scores = {};
         
-        const predictedClass = categoryMatch ? categoryMatch[1].trim() : 'Unknown';
-        const confidence = confidenceMatch ? parseFloat(confidenceMatch[1]) / 100 : 0;
-        
-        // Parse all scores
-        const scores = {};
-        const scoreRegex = /•\s*(.+?):\s*([\d.]+)%/g;
-        let match;
-        while ((match = scoreRegex.exec(markdown)) !== null) {
-          scores[match[1].trim()] = Math.round(parseFloat(match[2]));
+        if (typeof rawResult === 'object' && rawResult !== null) {
+          // New app.py returns JSON object via gr.JSON
+          const prediction = typeof rawResult === 'string' ? JSON.parse(rawResult) : rawResult;
+          predictedClass = prediction.predicted_class || 'Unknown';
+          confidence = prediction.confidence || 0;
+          const allScores = prediction.all_scores || {};
+          Object.entries(allScores).forEach(([key, val]) => {
+            scores[key] = Math.round(val * 100);
+          });
+        } else if (typeof rawResult === 'string' && rawResult.includes('**Predicted Category:**')) {
+          // Old app.py returns Markdown string
+          const categoryMatch = rawResult.match(/\*\*Predicted Category:\*\*\s*(.+)/);
+          const confidenceMatch = rawResult.match(/\*\*Confidence:\*\*\s*([\d.]+)%/);
+          predictedClass = categoryMatch ? categoryMatch[1].trim() : 'Unknown';
+          confidence = confidenceMatch ? parseFloat(confidenceMatch[1]) / 100 : 0;
+          const scoreRegex = /•\s*(.+?):\s*([\d.]+)%/g;
+          let match;
+          while ((match = scoreRegex.exec(rawResult)) !== null) {
+            scores[match[1].trim()] = Math.round(parseFloat(match[2]));
+          }
+        } else if (typeof rawResult === 'string') {
+          // Try parsing as JSON string
+          const prediction = JSON.parse(rawResult);
+          predictedClass = prediction.predicted_class || 'Unknown';
+          confidence = prediction.confidence || 0;
+          const allScores = prediction.all_scores || {};
+          Object.entries(allScores).forEach(([key, val]) => {
+            scores[key] = Math.round(val * 100);
+          });
+        } else {
+          throw new Error("Unknown response format");
         }
 
         return {
