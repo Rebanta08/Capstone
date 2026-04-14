@@ -642,41 +642,99 @@
       });
     }
 
-    function classifyText(text) {
-      const t = text.toLowerCase();
-
-      if (t.includes('vpn') || t.includes('access') || t.includes('login') || t.includes('password')) {
-        return examples[0];
-      }
-      if (t.includes('printer') || t.includes('monitor') || t.includes('laptop') || t.includes('keyboard')) {
-        return examples[1];
-      }
-      if (t.includes('outlook') || t.includes('mail') || t.includes('mailbox') || t.includes('email')) {
-        return examples[2];
+    // Hugging Face Spaces API endpoint (update with your actual space URL)
+    const HF_API_URL = "https://rebanta08-ticket-classifier.hf.space/api/predict/";
+    
+    async function classifyText(text) {
+      if (!text.trim()) {
+        alert('Please enter a ticket description');
+        return null;
       }
 
-      return {
-        text,
-        topic: 'Software',
-        confidence: 0.68,
-        scores: { Software: 68, Access: 12, Network: 10, Hardware: 6, Email: 4 }
-      };
+      try {
+        // Show loading state
+        document.getElementById('predictedTopic').textContent = 'Loading...';
+        document.getElementById('confidenceValue').textContent = '-';
+        
+        // Call HF Spaces API
+        const response = await fetch(HF_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: [text] })
+        });
+
+        if (!response.ok) {
+          throw new Error(`API Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const result = data.data?.[0];
+
+        if (!result) {
+          throw new Error("Invalid API response");
+        }
+
+        // Parse API response (handles both JSON string and object)
+        const prediction = typeof result === 'string' ? JSON.parse(result) : result;
+
+        // Extract predicted class and confidence
+        const predictedClass = prediction.predicted_class || 'Unknown';
+        const confidence = prediction.confidence || 0;
+        const allScores = prediction.all_scores || {};
+
+        // Convert scores to percentages for display
+        const scores = {};
+        Object.entries(allScores).forEach(([key, val]) => {
+          scores[key] = Math.round(val * 100);
+        });
+
+        return {
+          text,
+          topic: predictedClass,
+          confidence: confidence,
+          scores: scores
+        };
+      } catch (error) {
+        console.error('API Error:', error);
+        document.getElementById('predictedTopic').textContent = 'Error';
+        document.getElementById('confidenceValue').textContent = '-';
+        alert(`Prediction failed: ${error.message}. Using mock prediction.`);
+        return mockFallback(text);
+      }
     }
 
-    function runDemo() {
+    // Fallback mock prediction if API is unavailable
+    function mockFallback(text) {
+      const t = text.toLowerCase();
+      
+      if (t.includes('vpn') || t.includes('access') || t.includes('login')) {
+        return { text, topic: 'Access', confidence: 0.82, scores: { Access: 82, Hardware: 8, Administrative: 5, Storage: 3, HR: 2 } };
+      }
+      if (t.includes('printer') || t.includes('monitor') || t.includes('keyboard')) {
+        return { text, topic: 'Hardware', confidence: 0.89, scores: { Hardware: 89, Access: 5, Purchase: 3, Storage: 2, Administrative: 1 } };
+      }
+      if (t.includes('mail') || t.includes('outlook')) {
+        return { text, topic: 'Access', confidence: 0.75, scores: { Access: 75, Administrative: 12, Hardware: 8, Storage: 3, HR: 2 } };
+      }
+      
+      return { text, topic: 'Miscellaneous', confidence: 0.65, scores: { Miscellaneous: 65, Hardware: 15, Access: 10, Administrative: 5, Purchase: 4, Storage: 1 } };
+    }
+
+    async function runDemo() {
       const text = document.getElementById('ticketInput').value.trim();
-      const result = classifyText(text);
-      document.getElementById('predictedTopic').textContent = result.topic;
-      document.getElementById('confidenceValue').textContent = result.confidence.toFixed(2);
-      renderScores(result.scores);
+      const result = await classifyText(text);
+      
+      if (result) {
+        document.getElementById('predictedTopic').textContent = result.topic;
+        document.getElementById('confidenceValue').textContent = result.confidence.toFixed(2);
+        renderScores(result.scores);
+      }
     }
 
     function loadExample() {
       const sample = examples[Math.floor(Math.random() * examples.length)];
       document.getElementById('ticketInput').value = sample.text;
-      document.getElementById('predictedTopic').textContent = sample.topic;
-      document.getElementById('confidenceValue').textContent = sample.confidence.toFixed(2);
-      renderScores(result.scores);
+      runDemo();
     }
 
     renderScores(examples[0].scores);
