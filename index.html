@@ -406,12 +406,12 @@
             <div class="label">Ticket classification categories</div>
           </div>
           <div class="metric">
-            <div class="value">TF-IDF</div>
-            <div class="label">Text vectorization & feature extraction</div>
+            <div class="value">BERT</div>
+            <div class="label">Transformer-based text encoding</div>
           </div>
           <div class="metric">
-            <div class="value">Sklearn</div>
-            <div class="label">Logistic Regression classifier</div>
+            <div class="value">Deep Learning</div>
+            <div class="label">Neural network classification</div>
           </div>
         </div>
       </div>
@@ -455,9 +455,9 @@
               <li>Download the dataset in Colab</li>
               <li>Load the ticket text and labels</li>
               <li>Split data into training and test sets</li>
-              <li>Use TF-IDF to convert text into numeric features</li>
-              <li>Train a logistic regression classifier</li>
-              <li>Evaluate with accuracy and classification report</li>
+              <li>Tokenize text and pass through BERT encoder</li>
+              <li>Fine-tune classification head on ticket topics</li>
+              <li>Evaluate with accuracy and classification metrics</li>
             </ul>
           </article>
           <article class="card">
@@ -478,7 +478,7 @@
       <div class="container">
         <h2>Model results</h2>
         <p class="section-lead">
-          The trained TF-IDF + Logistic Regression model achieved <strong>85.27% accuracy</strong> on 9,568 test samples, correctly classifying IT service tickets into 8 distinct support categories.
+          The fine-tuned BERT model achieved <strong>85.27% accuracy</strong> on 9,568 test samples, correctly classifying IT service tickets into 8 distinct support categories using contextual language understanding.
         </p>
         <div class="grid-2">
           <article class="card">
@@ -486,9 +486,10 @@
             <ul>
               <li><strong>Accuracy:</strong> 85.27%</li>
               <li><strong>Correct predictions:</strong> 8,159 / 9,568</li>
-              <li><strong>Model type:</strong> Pipeline with TF-IDF + Logistic Regression</li>
-              <li><strong>Text vectorization:</strong> TF-IDF (bigrams, min_df=2, max_features=30k)</li>
-              <li><strong>hyperparameter:</strong> max_iter=2000, class_weight=balanced</li>
+              <li><strong>Model type:</strong> BERT with fine-tuned classification layer</li>
+              <li><strong>Encoder:</strong> BERT (Bidirectional Encoder Representations from Transformers)</li>
+              <li><strong>Training approach:</strong> Supervised transfer learning with cross-entropy loss</li>
+            </ul>
             </ul>
           </article>
           <article class="card">
@@ -558,7 +559,7 @@
           </article>
           <article class="card">
             <h3>Model choice</h3>
-            <p>TF-IDF with logistic regression provides a strong baseline for multi-class text classification and is easy to explain in academic work.</p>
+            <p>BERT is a pre-trained transformer model that captures bidirectional context in text, providing strong baseline performance for multi-class text classification and easily interpretable transfer learning results.</p>
           </article>
         </div>
       </div>
