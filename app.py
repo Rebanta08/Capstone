@@ -1,17 +1,17 @@
 """
 IT Service Ticket Classifier - Hugging Face Spaces
-Serves BERT model predictions via Gradio API
+Serves ALBERT model predictions via Gradio API
 """
 
 import gradio as gr
 import torch
-from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import AlbertTokenizer, AlbertForSequenceClassification
 import json
 
 # Load model and tokenizer
-print("Loading BERT model...")
-tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-model = BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=8)
+print("Loading ALBERT model...")
+tokenizer = AlbertTokenizer.from_pretrained("./albert_ticket_classifier")
+model = AlbertForSequenceClassification.from_pretrained("./albert_ticket_classifier", num_labels=8)
 
 # Define classes
 classes = ["Access", "Administrative rights", "HR Support", "Hardware", 
@@ -61,28 +61,12 @@ def classify_ticket(text):
 
 # Gradio interface
 def gradio_classify(ticket_text):
-    """Gradio wrapper for classification"""
+    """Gradio wrapper — returns JSON string for API consumers + display text"""
     result = classify_ticket(ticket_text)
     if "error" in result:
-        return result["error"], ""
+        return json.dumps(result)
     
-    pred = result["predicted_class"]
-    conf = result["confidence"]
-    
-    # Format scores for display
-    scores_text = "\n".join([
-        f"  • {cls}: {score:.1%}" 
-        for cls, score in sorted(result["all_scores"].items(), key=lambda x: x[1], reverse=True)
-    ])
-    
-    output = f"""
-**Predicted Category:** {pred}
-**Confidence:** {conf:.1%}
-
-**All Scores:**
-{scores_text}
-"""
-    return output, ""
+    return json.dumps(result)
 
 # Create Gradio interface
 demo = gr.Interface(
@@ -92,12 +76,9 @@ demo = gr.Interface(
         placeholder="Describe your IT issue (e.g., 'Cannot access shared drives')",
         lines=4
     ),
-    outputs=[
-        gr.Markdown(label="Prediction"),
-        gr.Textbox(visible=False)
-    ],
+    outputs=gr.JSON(label="Prediction"),
     title="IT Service Ticket Classifier",
-    description="Enter your IT support ticket description and get instant classification into one of 8 categories using a BERT transformer model trained on 47,837 real tickets.",
+    description="Enter your IT support ticket description and get instant classification into one of 8 categories using an ALBERT transformer model trained on 47,837 real tickets.",
     examples=[
         ["User cannot connect to VPN after password reset"],
         ["Printer is offline and not responding"],

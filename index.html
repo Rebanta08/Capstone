@@ -511,9 +511,9 @@
 
     <section class="section" id="demo">
       <div class="container">
-        <h2>Interactive mock demo</h2>
+        <h2>Live Demo</h2>
         <p class="section-lead">
-          This is a frontend-only mockup for presentation purposes. It simulates how a webpage could display model predictions for a ticket.
+          Try the live IT ticket classifier powered by our ALBERT model hosted on Hugging Face Spaces.
         </p>
         <div class="demo">
           <div class="card">
@@ -591,7 +591,7 @@
               <li>Insert your classification report metrics</li>
               <li>Link the GitHub repo and notebook</li>
               <li>Add a section for business value and limitations</li>
-              <li>Replace the mock demo with a real API later</li>
+              <li>Connect to a live model API for real predictions</li>
             </ul>
           </article>
         </div>
@@ -606,25 +606,14 @@
   </footer>
 
   <script>
-    const examples = [
-      {
-        text: 'Users are unable to access VPN after password reset. Several employees report login failure and cannot connect to internal resources.',
-        topic: 'Access',
-        confidence: 0.84,
-        scores: { Access: 84, Network: 10, Hardware: 3, Email: 2, Software: 1 }
-      },
-      {
-        text: 'The office printer is offline and finance cannot print payroll documents before the deadline.',
-        topic: 'Hardware',
-        confidence: 0.79,
-        scores: { Hardware: 79, Network: 9, Access: 5, Software: 4, Email: 3 }
-      },
-      {
-        text: 'Outlook mailbox is full and messages are bouncing back for multiple team members.',
-        topic: 'Email',
-        confidence: 0.81,
-        scores: { Email: 81, Access: 8, Software: 5, Network: 4, Hardware: 2 }
-      }
+    // Example texts for the "Load Example" button — predictions come from the API
+    const exampleTexts = [
+      'Users are unable to access VPN after password reset. Several employees report login failure and cannot connect to internal resources.',
+      'The office printer is offline and finance cannot print payroll documents before the deadline.',
+      'Need to purchase new software licenses for the development team.',
+      'New employee onboarding — need to set up email, badge access, and laptop.',
+      'Server storage running low, need to expand capacity for project files.',
+      'Requesting admin rights to install development tools on workstation.'
     ];
 
     function renderScores(scores) {
@@ -642,8 +631,8 @@
       });
     }
 
-    // Hugging Face Spaces API endpoint - Connected to live BERT model
-    const HF_API_URL = "https://rebanta08-capstonemodel.hf.space/api/predict/";
+    // Hugging Face Spaces API endpoint - Connected to live ALBERT model
+    const HF_API_URL = "https://rebanta08-capstonemodel.hf.space/api/predict";
     
     async function classifyText(text) {
       if (!text.trim()) {
@@ -656,7 +645,7 @@
         document.getElementById('predictedTopic').textContent = 'Loading...';
         document.getElementById('confidenceValue').textContent = '-';
         
-        // Call HF Spaces API
+        // Call HF Spaces Gradio API
         const response = await fetch(HF_API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -674,8 +663,13 @@
           throw new Error("Invalid API response");
         }
 
-        // Parse API response (handles both JSON string and object)
-        const prediction = typeof result === 'string' ? JSON.parse(result) : result;
+        // Gradio returns JSON output — parse if string
+        let prediction;
+        if (typeof result === 'string') {
+          prediction = JSON.parse(result);
+        } else {
+          prediction = result;
+        }
 
         // Extract predicted class and confidence
         const predictedClass = prediction.predicted_class || 'Unknown';
@@ -696,29 +690,14 @@
         };
       } catch (error) {
         console.error('API Error:', error);
-        document.getElementById('predictedTopic').textContent = 'Error';
+        document.getElementById('predictedTopic').textContent = 'App not available';
         document.getElementById('confidenceValue').textContent = '-';
-        alert(`Prediction failed: ${error.message}. Using mock prediction.`);
-        return mockFallback(text);
+        renderScores({});
+        return null;
       }
     }
 
-    // Fallback mock prediction if API is unavailable
-    function mockFallback(text) {
-      const t = text.toLowerCase();
-      
-      if (t.includes('vpn') || t.includes('access') || t.includes('login')) {
-        return { text, topic: 'Access', confidence: 0.82, scores: { Access: 82, Hardware: 8, Administrative: 5, Storage: 3, HR: 2 } };
-      }
-      if (t.includes('printer') || t.includes('monitor') || t.includes('keyboard')) {
-        return { text, topic: 'Hardware', confidence: 0.89, scores: { Hardware: 89, Access: 5, Purchase: 3, Storage: 2, Administrative: 1 } };
-      }
-      if (t.includes('mail') || t.includes('outlook')) {
-        return { text, topic: 'Access', confidence: 0.75, scores: { Access: 75, Administrative: 12, Hardware: 8, Storage: 3, HR: 2 } };
-      }
-      
-      return { text, topic: 'Miscellaneous', confidence: 0.65, scores: { Miscellaneous: 65, Hardware: 15, Access: 10, Administrative: 5, Purchase: 4, Storage: 1 } };
-    }
+    // Removed fallback logic. If API is unavailable, show 'App not available'.
 
     async function runDemo() {
       const text = document.getElementById('ticketInput').value.trim();
@@ -732,12 +711,15 @@
     }
 
     function loadExample() {
-      const sample = examples[Math.floor(Math.random() * examples.length)];
-      document.getElementById('ticketInput').value = sample.text;
+      const text = exampleTexts[Math.floor(Math.random() * exampleTexts.length)];
+      document.getElementById('ticketInput').value = text;
       runDemo();
     }
 
-    renderScores(examples[0].scores);
+    // On page load, call the API with the default text in the textarea
+    document.addEventListener('DOMContentLoaded', () => {
+      runDemo();
+    });
   </script>
 
 
