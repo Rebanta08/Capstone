@@ -523,6 +523,7 @@
               <button class="btn primary" onclick="runDemo()">Predict Topic</button>
               <button class="btn" onclick="loadExample()">Load Example</button>
             </div>
+            <div id="routingBox" style="margin-top:16px; padding:14px 18px; border-radius:12px; font-weight:600; font-size:0.95rem; display:none;"></div>
           </div>
           <div class="card result">
             <div class="result-box">
@@ -717,6 +718,7 @@
         document.getElementById('predictedTopic').textContent = 'App not available';
         document.getElementById('confidenceValue').textContent = '-';
         renderScores({});
+        document.getElementById('routingBox').style.display = 'none';
         return null;
       }
     }
@@ -731,6 +733,20 @@
         document.getElementById('predictedTopic').textContent = result.topic;
         document.getElementById('confidenceValue').textContent = result.confidence.toFixed(2);
         renderScores(result.scores);
+
+        const box = document.getElementById('routingBox');
+        box.style.display = 'block';
+        if (result.confidence > 0.50) {
+          box.textContent = '\u2705 Auto-routed to ' + result.topic;
+          box.style.background = 'rgba(142,240,208,0.12)';
+          box.style.border = '1px solid rgba(142,240,208,0.35)';
+          box.style.color = '#8ef0d0';
+        } else {
+          box.textContent = '\u26A0\uFE0F Marked for manual routing';
+          box.style.background = 'rgba(255,190,92,0.12)';
+          box.style.border = '1px solid rgba(255,190,92,0.35)';
+          box.style.color = '#ffbe5c';
+        }
       }
     }
 
