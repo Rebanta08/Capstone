@@ -1,1 +1,7 @@
-The office printer is offline and finance cannot print payroll documents before the deadline because of hardware cable 
+The office printer is offline and finance cannot print payroll documents before the deadline because of hardware cable
+I cannot login to the Storage account, since some administrator rights has not been configured after purchasing.
+----
+New employee onboarding — need to set up email, badge access, and laptop.
+Requesting admin rights to install development tools on workstation.
+New employee onboarding — need to set up email, badge access, and laptop.
+Server storage running low, need to expand capacity for project files.
