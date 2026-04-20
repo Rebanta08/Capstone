@@ -3,5 +3,4 @@ I cannot login to the Storage account, since some administrator rights has not b
 ----
 New employee onboarding — need to set up email, badge access, and laptop.
 Requesting admin rights to install development tools on workstation.
-New employee onboarding — need to set up email, badge access, and laptop.
 Server storage running low, need to expand capacity for project files.
