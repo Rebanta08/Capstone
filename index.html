@@ -778,6 +778,7 @@
     ];
 
     const LOG_STORAGE_KEY = 'ticket-classifier-logs';
+    const AUTO_ROUTE_THRESHOLD = 0.75;
 
     function switchTab(tabName) {
       const isDemo = tabName === 'demo';
@@ -789,23 +790,35 @@
       document.getElementById('logsTabButton').setAttribute('aria-selected', String(!isDemo));
     }
 
+    function parseConfidenceValue(confidence) {
+      if (typeof confidence === 'string') {
+        return parseFloat(confidence.replace('%', '')) / 100;
+      }
+
+      return Number(confidence || 0);
+    }
+
+    function getRoutingDecision(topic, confidence) {
+      const confidenceValue = parseConfidenceValue(confidence);
+      const manualReview = confidenceValue < AUTO_ROUTE_THRESHOLD;
+
+      return {
+        confidenceValue,
+        manualReview,
+        finalQueue: manualReview ? 'Manual Review Queue' : topic
+      };
+    }
+
     function readLogs() {
       try {
         const logs = JSON.parse(localStorage.getItem(LOG_STORAGE_KEY) || '[]');
         return logs.map((entry) => {
-          if (typeof entry.manualReview === 'boolean' && entry.finalQueue) {
-            return entry;
-          }
-
-          const confidenceValue = typeof entry.confidence === 'string'
-            ? parseFloat(entry.confidence.replace('%', '')) / 100
-            : Number(entry.confidence || 0);
-          const manualReview = confidenceValue <= 0.50;
+          const decision = getRoutingDecision(entry.topic, entry.confidence);
 
           return {
             ...entry,
-            finalQueue: entry.finalQueue || (manualReview ? 'Manual Review Queue' : entry.topic),
-            manualReview: typeof entry.manualReview === 'boolean' ? entry.manualReview : manualReview
+            finalQueue: decision.finalQueue,
+            manualReview: decision.manualReview
           };
         });
       } catch (error) {
@@ -865,14 +878,14 @@
 
     function saveLogEntry(result) {
       const logs = readLogs();
-      const manualReview = result.confidence <= 0.50;
+      const decision = getRoutingDecision(result.topic, result.confidence);
       logs.unshift({
         timestamp: new Date().toLocaleString(),
         text: result.text,
         topic: result.topic,
-        finalQueue: manualReview ? 'Manual Review Queue' : result.topic,
-        manualReview: manualReview,
-        confidence: `${(result.confidence * 100).toFixed(2)}%`
+        finalQueue: decision.finalQueue,
+        manualReview: decision.manualReview,
+        confidence: `${(decision.confidenceValue * 100).toFixed(2)}%`
       });
       writeLogs(logs.slice(0, 50));
       renderLogs();
@@ -997,14 +1010,15 @@
       const result = await classifyText(text);
       
       if (result) {
+        const decision = getRoutingDecision(result.topic, result.confidence);
         document.getElementById('predictedTopic').textContent = result.topic;
-        document.getElementById('confidenceValue').textContent = result.confidence.toFixed(2);
+        document.getElementById('confidenceValue').textContent = decision.confidenceValue.toFixed(2);
         renderScores(result.scores);
 
         const box = document.getElementById('routingBox');
         box.style.display = 'block';
-        if (result.confidence > 0.50) {
-          box.textContent = '\u2705 Auto-routed to ' + result.topic;
+        if (!decision.manualReview) {
+          box.textContent = '\u2705 Auto-routed to ' + decision.finalQueue;
           box.style.background = 'rgba(142,240,208,0.12)';
           box.style.border = '1px solid rgba(142,240,208,0.35)';
           box.style.color = '#8ef0d0';
