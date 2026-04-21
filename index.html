@@ -261,6 +261,51 @@
       align-items: stretch;
     }
 
+    .tab-shell {
+      display: grid;
+      gap: 18px;
+    }
+
+    .tab-bar {
+      display: inline-flex;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      width: fit-content;
+    }
+
+    .tab-button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+
+    .tab-button:hover {
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    .tab-button.active {
+      background: linear-gradient(135deg, rgba(122,162,255,0.22), rgba(142,240,208,0.18));
+      color: var(--text);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
     textarea {
       width: 100%;
       min-height: 220px;
@@ -325,6 +370,83 @@
       height: 100%;
       border-radius: 999px;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .logs-card {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .logs-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 20px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .logs-copy {
+      color: var(--muted);
+      max-width: 700px;
+    }
+
+    .log-count {
+      color: var(--accent-2);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 16px 22px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.03);
+    }
+
+    td {
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    .log-text {
+      min-width: 320px;
+      color: var(--muted);
+    }
+
+    .confidence-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 76px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(122,162,255,0.14);
+      border: 1px solid rgba(122,162,255,0.24);
+      font-weight: 700;
+    }
+
+    .empty-state {
+      padding: 28px 22px;
+      color: var(--muted);
     }
 
     .footer {
@@ -515,28 +637,66 @@
         <p class="section-lead">
           Try the live IT ticket classifier powered by our ALBERT model hosted on Hugging Face Spaces.
         </p>
-        <div class="demo">
-          <div class="card">
-            <h3 style="margin-top:0;">Enter a ticket</h3>
-            <textarea id="ticketInput">Users are unable to access VPN after password reset. Several employees report login failure and cannot connect to internal resources.</textarea>
-            <div class="hero-actions" style="margin-top:16px;">
-              <button class="btn primary" onclick="runDemo()">Predict Topic</button>
-              <button class="btn" onclick="loadExample()">Load Example</button>
-            </div>
-            <div id="routingBox" style="margin-top:16px; padding:14px 18px; border-radius:12px; font-weight:600; font-size:0.95rem; display:none;"></div>
+        <div class="tab-shell">
+          <div class="tab-bar" role="tablist" aria-label="Classifier views">
+            <button class="tab-button active" id="demoTabButton" type="button" role="tab" aria-selected="true" aria-controls="demoPanel" onclick="switchTab('demo')">Classifier</button>
+            <button class="tab-button" id="logsTabButton" type="button" role="tab" aria-selected="false" aria-controls="logsPanel" onclick="switchTab('logs')">Prediction Logs</button>
           </div>
-          <div class="card result">
-            <div class="result-box">
-              <div class="result-title">Predicted topic</div>
-              <div class="result-value" id="predictedTopic">Access</div>
+
+          <div class="tab-panel active" id="demoPanel" role="tabpanel" aria-labelledby="demoTabButton">
+            <div class="demo">
+              <div class="card">
+                <h3 style="margin-top:0;">Enter a ticket</h3>
+                <textarea id="ticketInput">Users are unable to access VPN after password reset. Several employees report login failure and cannot connect to internal resources.</textarea>
+                <div class="hero-actions" style="margin-top:16px;">
+                  <button class="btn primary" onclick="runDemo()">Predict Topic</button>
+                  <button class="btn" onclick="loadExample()">Load Example</button>
+                  <button class="btn" onclick="switchTab('logs')">View Logs</button>
+                </div>
+                <div id="routingBox" style="margin-top:16px; padding:14px 18px; border-radius:12px; font-weight:600; font-size:0.95rem; display:none;"></div>
+              </div>
+              <div class="card result">
+                <div class="result-box">
+                  <div class="result-title">Predicted topic</div>
+                  <div class="result-value" id="predictedTopic">Access</div>
+                </div>
+                <div class="result-box">
+                  <div class="result-title">Confidence</div>
+                  <div class="result-value" id="confidenceValue">0.84</div>
+                </div>
+                <div class="result-box">
+                  <div class="result-title">Top probabilities</div>
+                  <div class="probabilities" id="probabilities"></div>
+                </div>
+              </div>
             </div>
-            <div class="result-box">
-              <div class="result-title">Confidence</div>
-              <div class="result-value" id="confidenceValue">0.84</div>
-            </div>
-            <div class="result-box">
-              <div class="result-title">Top probabilities</div>
-              <div class="probabilities" id="probabilities"></div>
+          </div>
+
+          <div class="tab-panel" id="logsPanel" role="tabpanel" aria-labelledby="logsTabButton">
+            <div class="card logs-card">
+              <div class="logs-toolbar">
+                <div>
+                  <div class="log-count" id="logCount">0 entries</div>
+                  <div class="logs-copy">Every successful ticket prediction is stored here with the incoming text description, predicted topic, confidence score, and timestamp.</div>
+                </div>
+                <button class="btn" type="button" onclick="clearLogs()">Clear Logs</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Description</th>
+                      <th>Topic</th>
+                      <th>Final Queue</th>
+                      <th>Manual Review</th>
+                      <th>Confidence</th>
+                    </tr>
+                  </thead>
+                  <tbody id="logsBody"></tbody>
+                </table>
+              </div>
+              <div class="empty-state" id="logsEmpty">No prediction logs yet. Run a classification to start building the log.</div>
             </div>
           </div>
         </div>
@@ -616,6 +776,112 @@
       'Server storage running low, need to expand capacity for project files.',
       'Requesting admin rights to install development tools on workstation.'
     ];
+
+    const LOG_STORAGE_KEY = 'ticket-classifier-logs';
+
+    function switchTab(tabName) {
+      const isDemo = tabName === 'demo';
+      document.getElementById('demoPanel').classList.toggle('active', isDemo);
+      document.getElementById('logsPanel').classList.toggle('active', !isDemo);
+      document.getElementById('demoTabButton').classList.toggle('active', isDemo);
+      document.getElementById('logsTabButton').classList.toggle('active', !isDemo);
+      document.getElementById('demoTabButton').setAttribute('aria-selected', String(isDemo));
+      document.getElementById('logsTabButton').setAttribute('aria-selected', String(!isDemo));
+    }
+
+    function readLogs() {
+      try {
+        const logs = JSON.parse(localStorage.getItem(LOG_STORAGE_KEY) || '[]');
+        return logs.map((entry) => {
+          if (typeof entry.manualReview === 'boolean' && entry.finalQueue) {
+            return entry;
+          }
+
+          const confidenceValue = typeof entry.confidence === 'string'
+            ? parseFloat(entry.confidence.replace('%', '')) / 100
+            : Number(entry.confidence || 0);
+          const manualReview = confidenceValue <= 0.50;
+
+          return {
+            ...entry,
+            finalQueue: entry.finalQueue || (manualReview ? 'Manual Review Queue' : entry.topic),
+            manualReview: typeof entry.manualReview === 'boolean' ? entry.manualReview : manualReview
+          };
+        });
+      } catch (error) {
+        console.error('Unable to read logs:', error);
+        return [];
+      }
+    }
+
+    function writeLogs(logs) {
+      localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(logs));
+    }
+
+    function renderLogs() {
+      const logs = readLogs();
+      const body = document.getElementById('logsBody');
+      const empty = document.getElementById('logsEmpty');
+      const count = document.getElementById('logCount');
+
+      body.innerHTML = '';
+      count.textContent = `${logs.length} ${logs.length === 1 ? 'entry' : 'entries'}`;
+      empty.style.display = logs.length ? 'none' : 'block';
+
+      logs.forEach((entry) => {
+        const row = document.createElement('tr');
+
+        const timestampCell = document.createElement('td');
+        timestampCell.textContent = entry.timestamp;
+
+        const textCell = document.createElement('td');
+        textCell.className = 'log-text';
+        textCell.textContent = entry.text;
+
+        const topicCell = document.createElement('td');
+        topicCell.textContent = entry.topic;
+
+        const queueCell = document.createElement('td');
+        queueCell.textContent = entry.finalQueue;
+
+        const manualReviewCell = document.createElement('td');
+        manualReviewCell.textContent = entry.manualReview ? 'Yes' : 'No';
+
+        const confidenceCell = document.createElement('td');
+        const confidencePill = document.createElement('span');
+        confidencePill.className = 'confidence-pill';
+        confidencePill.textContent = entry.confidence;
+        confidenceCell.appendChild(confidencePill);
+
+        row.appendChild(timestampCell);
+        row.appendChild(textCell);
+        row.appendChild(topicCell);
+        row.appendChild(queueCell);
+        row.appendChild(manualReviewCell);
+        row.appendChild(confidenceCell);
+        body.appendChild(row);
+      });
+    }
+
+    function saveLogEntry(result) {
+      const logs = readLogs();
+      const manualReview = result.confidence <= 0.50;
+      logs.unshift({
+        timestamp: new Date().toLocaleString(),
+        text: result.text,
+        topic: result.topic,
+        finalQueue: manualReview ? 'Manual Review Queue' : result.topic,
+        manualReview: manualReview,
+        confidence: `${(result.confidence * 100).toFixed(2)}%`
+      });
+      writeLogs(logs.slice(0, 50));
+      renderLogs();
+    }
+
+    function clearLogs() {
+      writeLogs([]);
+      renderLogs();
+    }
 
     function renderScores(scores) {
       const container = document.getElementById('probabilities');
@@ -725,7 +991,8 @@
 
     // Removed fallback logic. If API is unavailable, show 'App not available'.
 
-    async function runDemo() {
+    async function runDemo(options = {}) {
+      const { saveLog = true } = options;
       const text = document.getElementById('ticketInput').value.trim();
       const result = await classifyText(text);
       
@@ -747,6 +1014,10 @@
           box.style.border = '1px solid rgba(255,190,92,0.35)';
           box.style.color = '#ffbe5c';
         }
+
+        if (saveLog) {
+          saveLogEntry(result);
+        }
       }
     }
 
@@ -758,7 +1029,8 @@
 
     // On page load, call the API with the default text in the textarea
     document.addEventListener('DOMContentLoaded', () => {
-      runDemo();
+      renderLogs();
+      runDemo({ saveLog: false });
     });
   </script>
 
